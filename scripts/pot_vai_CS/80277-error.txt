@@ -6323,3 +6323,6 @@ gpu_ids = range(0, 1)
 /data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/runner/hooks/logger/text.py:55: DeprecationWarning: an integer is required (got type float).  Implicit conversion to integers using __int__ is deprecated, and may be removed in a future version of Python.
   mem_mb = torch.tensor([mem / (1024 * 1024)],
 2024-06-17 16:30:57,697 - mmseg - INFO - Iter [30250/40000]	lr: 1.463e-05, eta: 4:45:43, time: 1.738, data_time: 0.018, memory: 17469, decode.loss_dice: 0.1571, decode.loss_focal: 0.0082, decode.acc_seg: 82.2382, src.loss_imnet_feat_dist: nan, mix.decode.loss_dice: 0.1317, mix.decode.loss_focal: 0.0061, mix.decode.acc_seg: 88.7384
+/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/runner/hooks/logger/text.py:55: DeprecationWarning: an integer is required (got type float).  Implicit conversion to integers using __int__ is deprecated, and may be removed in a future version of Python.
+  mem_mb = torch.tensor([mem / (1024 * 1024)],
+2024-06-17 16:32:24,650 - mmseg - INFO - Iter [30300/40000]	lr: 1.455e-05, eta: 4:44:15, time: 1.739, data_time: 0.018, memory: 17469, decode.loss_dice: 0.1468, decode.loss_focal: 0.0079, decode.acc_seg: 84.8552, src.loss_imnet_feat_dist: nan, mix.decode.loss_dice: 0.1451, mix.decode.loss_focal: 0.0071, mix.decode.acc_seg: 89.4056
