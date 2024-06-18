@@ -3,7 +3,7 @@
 # ---- SLURM SETTINGS ---- #
 
 # -- Job Specific -- #
-#SBATCH --job-name="pot2vai"   # What is your job called?
+#SBATCH --job-name="gta2cs"   # What is your job called?
 #SBATCH --output=%j-output.txt  # Output file - Use %j to inject job id, like %j-output.txt
 #SBATCH --error=%j-error.txt    # Error file - Use %j to inject job id, like %j-error.txt
 
@@ -26,4 +26,4 @@ module load python-libs
 conda activate daformer_2 # activates the virtual environment
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-python run_experiments.py --config configs/daformer/gta2cs_osda.py
+python run_experiments.py --config configs/daformer/gta2cs_uda_warm_fdthings_rcs_croppl_a999_daformer_mitb5_s0_OS.py
