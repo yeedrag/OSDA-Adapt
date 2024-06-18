@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "run_experiments.py", line 59, in <module>
+    cfg = Config.fromfile(args.config)
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/utils/config.py", line 254, in fromfile
+    cfg_dict, cfg_text = Config._file2dict(filename,
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/utils/config.py", line 177, in _file2dict
+    _cfg_dict, _cfg_text = Config._file2dict(osp.join(cfg_dir, f))
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/utils/config.py", line 126, in _file2dict
+    check_file_exist(filename)
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/utils/path.py", line 23, in check_file_exist
+    raise FileNotFoundError(msg_tmpl.format(filename))
+FileNotFoundError: file "/data/groups/rozaripf/REU_2024/UDA/DAFormer/configs/_base_/datasets/uda_gta_to_skyscapes_512x512.py" does not exist

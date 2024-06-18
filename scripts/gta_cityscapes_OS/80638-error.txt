@@ -1,0 +1,24 @@
+Traceback (most recent call last):
+  File "run_experiments.py", line 59, in <module>
+    cfg = Config.fromfile(args.config)
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/utils/config.py", line 254, in fromfile
+    cfg_dict, cfg_text = Config._file2dict(filename,
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/site-packages/mmcv/utils/config.py", line 148, in _file2dict
+    mod = import_module(temp_module_name)
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 671, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 783, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/local/scratch/job_80638/tmp7f39o87j/tmp14gknqa8.py", line 29, in <module>
+NameError: name 'train_pipeline' is not defined
+Exception ignored in: <function _TemporaryFileCloser.__del__ at 0x7f0058ea58b0>
+Traceback (most recent call last):
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tempfile.py", line 441, in __del__
+    self.close()
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tempfile.py", line 437, in close
+    unlink(self.name)
+FileNotFoundError: [Errno 2] No such file or directory: '/local/scratch/job_80638/tmp7f39o87j/tmp14gknqa8.py'
