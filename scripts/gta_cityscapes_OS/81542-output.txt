@@ -1,0 +1,2 @@
+Run job gta2cs_uda_warm_fdthings_rcs_croppl_a999_tau5_daformer_mitb5_s0_OS
+softmax shape:  torch.Size([2, 19, 512, 512])

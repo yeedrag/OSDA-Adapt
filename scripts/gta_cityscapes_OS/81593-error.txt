@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "run_experiments.py", line 106, in <module>
+    train.main([config_files[i]])
+  File "/data/groups/rozaripf/REU_2024/UDA/DAFormer/tools/train.py", line 111, in main
+    gen_code_archive(cfg.work_dir)
+  File "/data/groups/rozaripf/REU_2024/UDA/DAFormer/mmseg/utils/collect_env.py", line 34, in gen_code_archive
+    tar.add('.', filter=is_source_file)
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tarfile.py", line 1975, in add
+    self.add(os.path.join(name, f), os.path.join(arcname, f),
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tarfile.py", line 1975, in add
+    self.add(os.path.join(name, f), os.path.join(arcname, f),
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tarfile.py", line 1975, in add
+    self.add(os.path.join(name, f), os.path.join(arcname, f),
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tarfile.py", line 1969, in add
+    self.addfile(tarinfo, f)
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tarfile.py", line 1997, in addfile
+    copyfileobj(fileobj, self.fileobj, tarinfo.size, bufsize=bufsize)
+  File "/data/users/wangad0448/.conda/envs/daformer_2/lib/python3.8/tarfile.py", line 255, in copyfileobj
+    raise exception("unexpected end of data")
+OSError: unexpected end of data
