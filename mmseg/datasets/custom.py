@@ -374,13 +374,24 @@ class CustomDataset(Dataset):
         for key, val in ret_metrics_class.items():
             class_table_data.add_column(key, val)
 
+        # Calculate the H-Score 
+
+        acc_table = ret_metrics_class['Acc'] # -> numpy arrays
+        iou_table= ret_metrics_class['IoU']
+
+        unknown_iou = iou_table[-1]
+        iou_table = iou_table[:-1]
+        mean_values = np.mean(iou_table[~np.isnan(acc_table[:-1])]) # mean all non-nan values in IoU
+
+        H_score = np.round((2 * mean_values * unknown_iou) / (mean_values + unknown_iou), 2)
+
         summary_table_data = PrettyTable()
         for key, val in ret_metrics_summary.items():
             if key == 'aAcc':
                 summary_table_data.add_column(key, [val])
             else:
                 summary_table_data.add_column('m' + key, [val])
-
+        summary_table_data.add_column('H-Score', [H_score]) # Add H score in summary table
         print_log('per class results:', logger)
         print_log('\n' + class_table_data.get_string(), logger=logger)
         print_log('Summary:', logger)

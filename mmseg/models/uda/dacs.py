@@ -58,6 +58,8 @@ class DACS(UDADecorator):
         self.max_iters = cfg['max_iters']
         self.alpha = cfg['alpha']
         self.pseudo_threshold = cfg['pseudo_threshold']
+        self.unknown_label = cfg['unknown_label'] # the label of the unknown classes
+        self.start_unknown = cfg['start_unknown']
         self.psweight_ignore_top = cfg['pseudo_weight_ignore_top']
         self.psweight_ignore_bottom = cfg['pseudo_weight_ignore_bottom']
         self.fdist_lambda = cfg['imnet_feature_dist_lambda']
@@ -271,9 +273,16 @@ class DACS(UDADecorator):
 
         ema_softmax = torch.softmax(ema_logits.detach(), dim=1)
         pseudo_prob, pseudo_label = torch.max(ema_softmax, dim=1)
+
         ps_large_p = pseudo_prob.ge(self.pseudo_threshold).long() == 1
+        pseudo_label_copy = pseudo_label.clone().detach() # Copy for further visualization
+        pseudo_prob_copy = pseudo_prob.clone().detach() # Copy for further visualization
+        if self.unknown_label != None and self.local_iter >= self.start_unknown: 
+            # All pixels with condifence less than pseudo_threshold
+            ps_small_p = pseudo_prob.lt(self.pseudo_threshold).long() == 1 
+            pseudo_label[ps_small_p] = self.unknown_label
         ps_size = np.size(np.array(pseudo_label.cpu()))
-        pseudo_weight = torch.sum(ps_large_p).item() / ps_size
+        pseudo_weight = torch.sum(ps_large_p).item() / ps_size # q_t, confidence
         pseudo_weight = pseudo_weight * torch.ones(
             pseudo_prob.shape, device=dev)
 
@@ -342,18 +351,29 @@ class DACS(UDADecorator):
                     cmap='cityscapes')
                 subplotimg(
                     axs[1][1],
-                    pseudo_label[j],
-                    'Target Seg (Pseudo) GT',
+                    pseudo_label_copy[j],
+                    'Target Pseudo GT',
                     cmap='cityscapes')
-                subplotimg(axs[0][2], vis_mixed_img[j], 'Mixed Image')
                 subplotimg(
-                    axs[1][2], mix_masks[j][0], 'Domain Mask', cmap='gray')
+                    axs[1][2],
+                    pseudo_label[j],
+                    'Target Threshold (Pseudo) GT',
+                    cmap='cityscapes')
+                subplotimg(
+                    axs[0][2],
+                    pseudo_prob_copy[j],
+                    'Target probability',
+                    cmap='viridis', interpolation='nearest')                
+                subplotimg(axs[0][3], vis_mixed_img[j], 'Mixed Image')
+                subplotimg(
+                    axs[1][3], mix_masks[j][0], 'Domain Mask', cmap='gray')
                 # subplotimg(axs[0][3], pred_u_s[j], "Seg Pred",
                 #            cmap="cityscapes")
                 subplotimg(
-                    axs[1][3], mixed_lbl[j], 'Seg Targ', cmap='cityscapes')
+                    axs[1][4], mixed_lbl[j], 'Seg Targ', cmap='cityscapes')
                 subplotimg(
-                    axs[0][3], pseudo_weight[j], 'Pseudo W.', vmin=0, vmax=1)
+                    axs[0][4], pseudo_weight[j], 'Pseudo W.', vmin=0, vmax=1)
+                """
                 if self.debug_fdist_mask is not None:
                     subplotimg(
                         axs[0][4],
@@ -366,6 +386,7 @@ class DACS(UDADecorator):
                         self.debug_gt_rescale[j],
                         'Scaled GT',
                         cmap='cityscapes')
+                """
                 for ax in axs.flat:
                     ax.axis('off')
                 plt.savefig(
