@@ -1,5 +1,0 @@
-Run job potsdam2vaihingen_uda_warm_fdthings_rcs_croppl_a999_daformer_focaldice_mitb5_s0
-pred.shape: torch.Size([4, 6, 512, 512])
-target.shape torch.Size([4, 512, 512])
-pred.shape: torch.Size([4, 6, 512, 512])
-target.shape torch.Size([4, 512, 512])

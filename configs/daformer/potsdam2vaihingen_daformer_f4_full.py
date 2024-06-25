@@ -7,7 +7,7 @@
 _base_ = [
     '../_base_/default_runtime.py',
     # DAFormer Network Architecture
-    '../_base_/models/daformer_sepaspp_focaldice_mitb5.py',
+    '../_base_/models/daformer_sepaspp_bottleneck_mitb5.py',
     # Potsdam->Vaihingen Data Loading
     '../_base_/datasets/uda_potsdam_to_vaihingen_512x512.py',
     # Basic UDA Self-Training
@@ -71,12 +71,12 @@ log_config = dict(
 ])
 
 # Meta Information for Result Analysis
-name = 'potsdam2vaihingen_uda_warm_fdthings_rcs_croppl_a999_daformer_focaldice_mitb5_s0'
+name = 'potsdam2vaihingen_uda_warm_fdthings_rcs_croppl_a999_daformer_f4'
 exp = 'basic'
 name_dataset = 'potsdam2vaihingen'
-name_architecture = 'daformer_sepaspp_focaldice_mitb5'
+name_architecture = 'daformer_sepaspp_f4_mitb5'
 name_encoder = 'mitb5'
-name_decoder = 'daformer_sepaspp_focaldice'
+name_decoder = 'daformer_sepaspp_f4'
 name_uda = 'dacs_a999_fd_things_rcs0.01_cpl'
 name_opt = 'adamw_6e-05_pmTrue_poly10warm_1x2_40k'
 

@@ -20,7 +20,7 @@
 #SBATCH --mail-type=END         # What notifications should be emailed about? (Options: NONE, ALL, BEGIN, END, FAIL, QUEUE)
 
 # ---- YOUR SCRIPT ---- #
-cd ../DAFormer
+cd ../..
 #module load python-libs
 #conda activate daformer_2 # activates the virtual environment
 python run_experiments.py --config configs/daformer/gta2cs_uda_warm_fdthings_rcs_croppl_a999_daformer_mitb5_s0.py

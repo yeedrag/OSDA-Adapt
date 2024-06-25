@@ -20,9 +20,10 @@
 #SBATCH --mail-type=END         # What notifications should be emailed about? (Options: NONE, ALL, BEGIN, END, FAIL, QUEUE)
 
 # ---- YOUR SCRIPT ---- #
-cd ../DAFormer
+cd ../..
 source $(conda info --base)/etc/profile.d/conda.sh
 module load python-libs
 conda activate daformer_2 # activates the virtual environment
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-python train2.py configs/daformer/potsdam2vaihingen_daformer_mitb5_full.py
+python run_experiments.py --config configs/daformer/potsdam2vaihingen_daformer_f4_full.py
