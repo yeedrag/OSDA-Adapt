@@ -278,7 +278,7 @@ class DACS(UDADecorator):
         ps_large_p = pseudo_prob.ge(self.pseudo_threshold_p).long() == 1
         pseudo_label_copy = pseudo_label.clone().detach() # Copy for further visualization
         pseudo_prob_copy = pseudo_prob.clone().detach() # Copy for further visualization
-        if self.unknown_label != None and self.local_iter >= self.start_unknown: 
+        if self.unknown_label != None: #and self.local_iter >= self.start_unknown: 
             # All pixels with condifence less than pseudo_threshold_t
             ps_small_p = pseudo_prob.lt(self.pseudo_threshold_t).long() == 1 
             pseudo_label[ps_small_p] = self.unknown_label

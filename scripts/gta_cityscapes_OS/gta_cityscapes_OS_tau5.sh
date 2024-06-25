@@ -26,4 +26,4 @@ module load python-libs
 conda activate daformer_2 # activates the virtual environment
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-python run_experiments.py --config configs/daformer/gta2cs_uda_warm_fdthings_rcs_croppl_a999_tau5_daformer_mitb5_s0_OS.py
+python run_experiments.py --config configs/daformer/gta2cs_tau5_OS.py
