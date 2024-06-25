@@ -57,9 +57,10 @@ class DACS(UDADecorator):
         self.local_iter = 0
         self.max_iters = cfg['max_iters']
         self.alpha = cfg['alpha']
-        self.pseudo_threshold = cfg['pseudo_threshold']
+        self.pseudo_threshold_p = cfg['pseudo_threshold_p']
+        self.pseudo_threshold_t = cfg['pseudo_threshold_t']
         self.unknown_label = cfg['unknown_label'] # the label of the unknown classes
-        self.start_unknown = cfg['start_unknown']
+        #self.start_unknown = cfg['start_unknown']
         self.psweight_ignore_top = cfg['pseudo_weight_ignore_top']
         self.psweight_ignore_bottom = cfg['pseudo_weight_ignore_bottom']
         self.fdist_lambda = cfg['imnet_feature_dist_lambda']
@@ -274,12 +275,12 @@ class DACS(UDADecorator):
         ema_softmax = torch.softmax(ema_logits.detach(), dim=1)
         pseudo_prob, pseudo_label = torch.max(ema_softmax, dim=1)
 
-        ps_large_p = pseudo_prob.ge(self.pseudo_threshold).long() == 1
+        ps_large_p = pseudo_prob.ge(self.pseudo_threshold_p).long() == 1
         pseudo_label_copy = pseudo_label.clone().detach() # Copy for further visualization
         pseudo_prob_copy = pseudo_prob.clone().detach() # Copy for further visualization
         if self.unknown_label != None and self.local_iter >= self.start_unknown: 
-            # All pixels with condifence less than pseudo_threshold
-            ps_small_p = pseudo_prob.lt(self.pseudo_threshold).long() == 1 
+            # All pixels with condifence less than pseudo_threshold_t
+            ps_small_p = pseudo_prob.lt(self.pseudo_threshold_t).long() == 1 
             pseudo_label[ps_small_p] = self.unknown_label
         ps_size = np.size(np.array(pseudo_label.cpu()))
         pseudo_weight = torch.sum(ps_large_p).item() / ps_size # q_t, confidence
