@@ -20,10 +20,11 @@
 #SBATCH --mail-type=END         # What notifications should be emailed about? (Options: NONE, ALL, BEGIN, END, FAIL, QUEUE)
 
 # ---- YOUR SCRIPT ---- #
-cd ../..
+cd ../../..
 source $(conda info --base)/etc/profile.d/conda.sh
 module load python-libs
 conda activate daformer_2 # activates the virtual environment
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-python run_experiments.py --config configs/daformer/gta2cs_tau7_unknown_warm4000_OS_s0.py
+# Add the name of the folder in
+sh test.sh work_dirs/local-basic/

@@ -28,7 +28,7 @@ def create_folder_and_files(name):
 #SBATCH --mail-type=END         # What notifications should be emailed about? (Options: NONE, ALL, BEGIN, END, FAIL, QUEUE)
 
 # ---- YOUR SCRIPT ---- #
-cd ../..
+cd ../../..
 source $(conda info --base)/etc/profile.d/conda.sh
 module load python-libs
 conda activate daformer_2 # activates the virtual environment
@@ -60,7 +60,7 @@ python run_experiments.py --config configs/daformer/{name}.py
 #SBATCH --mail-type=END         # What notifications should be emailed about? (Options: NONE, ALL, BEGIN, END, FAIL, QUEUE)
 
 # ---- YOUR SCRIPT ---- #
-cd ../..
+cd ../../..
 source $(conda info --base)/etc/profile.d/conda.sh
 module load python-libs
 conda activate daformer_2 # activates the virtual environment
@@ -71,12 +71,12 @@ sh test.sh work_dirs/local-basic/
 """
 
     # Create the train script file
-    train_script_path = os.path.join(name, f"{name}_train.sh")
+    train_script_path = os.path.join(name, f"train_{name}.sh")
     with open(train_script_path, 'w') as train_script_file:
         train_script_file.write(train_script_content)
 
     # Create the test script file
-    test_script_path = os.path.join(name, f"{name}_test.sh")
+    test_script_path = os.path.join(name, f"test_{name}.sh")
     with open(test_script_path, 'w') as test_script_file:
         test_script_file.write(test_script_content)
 

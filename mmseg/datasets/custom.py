@@ -330,6 +330,7 @@ class CustomDataset(Dataset):
 
         if isinstance(metric, str):
             metric = [metric]
+        # TODO: integrate H-Score in here
         allowed_metrics = ['mIoU', 'mDice', 'mFscore']
         if not set(metric).issubset(set(allowed_metrics)):
             raise KeyError('metric {} is not supported'.format(metric))

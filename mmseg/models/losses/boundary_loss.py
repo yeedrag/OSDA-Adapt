@@ -5,8 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from mmseg.registry import MODELS
-
+from ..builder import LOSSES
 
 @LOSSES.register_module()
 class BoundaryLoss(nn.Module):
@@ -26,12 +25,15 @@ class BoundaryLoss(nn.Module):
 
     def __init__(self,
                  loss_weight: float = 1.0,
-                 loss_name: str = 'loss_boundary'):
+                 loss_name: str = 'loss_boundary',
+                 ignore_index=255,
+                 **kwargs
+                 ):
         super().__init__()
         self.loss_weight = loss_weight
         self.loss_name_ = loss_name
-
-    def forward(self, bd_pre: Tensor, bd_gt: Tensor) -> Tensor:
+        self.ignore_index=ignore_index
+    def forward(self, bd_pre: Tensor, bd_gt: Tensor, **kwargs) -> Tensor:
         """Forward function.
         Args:
             bd_pre (Tensor): Predictions of the boundary head.
@@ -54,7 +56,7 @@ class BoundaryLoss(nn.Module):
         weight[neg_index] = pos_num * 1.0 / sum_num
 
         loss = F.binary_cross_entropy_with_logits(
-            log_p, target_t, weight, reduction='mean')
+            log_p, target_t, weight=weight, reduction='mean')
 
         return self.loss_weight * loss
 
