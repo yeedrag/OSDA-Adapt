@@ -20,6 +20,7 @@ _base_ = [
 seed = 0
 # Modifications to Basic UDA
 uda = dict(
+    type='DACS_OS_Dynamic',
     # Increased Alpha
     alpha=0.999,
     # Thing-Class Feature Distance
