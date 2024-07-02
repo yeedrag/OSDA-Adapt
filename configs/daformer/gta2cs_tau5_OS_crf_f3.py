@@ -10,7 +10,7 @@ _base_ = [
     # GTA->Cityscapes Data Loading
     '../_base_/datasets/uda_gta_to_cityscapes_512x512.py',
     # Basic UDA Self-Training
-    '../_base_/uda/dacs.py',
+    '../_base_/uda/dacs_os_fixed.py',
     # AdamW Optimizer
     '../_base_/schedules/adamw.py',
     # Linear Learning Rate Warmup with Subsequent Linear Decay

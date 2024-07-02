@@ -3,6 +3,6 @@
 # Licensed under the Apache License, Version 2.0
 # ---------------------------------------------------------------
 
-from mmseg.models.uda.dacs import DACS
+from mmseg.models.uda.dacs_os_fixed import DACS_OS_Fixed
 
-__all__ = ['DACS']
+__all__ = ['DACS_OS_Fixed']
