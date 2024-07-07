@@ -20,6 +20,7 @@ _base_ = [
 seed = 0
 # Modifications to Basic UDA
 uda = dict(
+    type='DACS_OS_Dynamic',
     # Increased Alpha
     alpha=0.999,
     # Thing-Class Feature Distance
@@ -31,6 +32,7 @@ uda = dict(
     # Unknown label
     unknown_label=19,
     # Pseudo-label tau
+    update_threshold_iter=1000,
     pseudo_threshold_t=0.968, # Original DAFormer Paper
     pseudo_threshold_p=0.5,
     # Pseudo-Label Crop
