@@ -1,18 +1,17 @@
 # Obtained from: https://github.com/open-mmlab/mmsegmentation/tree/v1.2.2
-# Modifications: Added potsdam dataset as validation
+# Modifications: Added vaihingen dataset as validation
 
 # dataset settings
-dataset_type_train = 'ISPRSDataset'
-data_root_train = 'data/vaihingen'
-dataset_type_val = 'ISPRSDataset' # Both types are exactly the same
-data_root_val = 'data/potsdam'
+dataset_ISPRS = 'ISPRSDataset'
+data_root_potsdam = 'data/potsdam_car'
+data_root_vaihingen = 'data/vaihingen_car'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 crop_size = (512, 512)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
-    dict(type='LoadAnnotations', reduce_zero_label=True),
+    dict(type='LoadAnnotations', reduce_zero_label=True), #! !!!!
     dict(type='Resize', img_scale=(512, 512), ratio_range=(0.5, 2.0)),
     dict(type='RandomCrop', crop_size=crop_size, cat_max_ratio=0.75),
     dict(type='RandomFlip', prob=0.5),
@@ -43,26 +42,26 @@ data = dict(
     train=dict(
         type='UDADataset',
         source=dict(
-            type=dataset_type_train,
-            data_root=data_root_val,
+            type=dataset_ISPRS,
+            data_root=data_root_potsdam,
             img_dir='img_dir/train',
-            ann_dir='ann_dir/train',
+            ann_dir='ann_dir_os/train',
             pipeline=train_pipeline),
         target=dict(
-            type=dataset_type_val,
-            data_root=data_root_val,
-            img_dir='img_dir/val',
-            ann_dir='ann_dir/val',
+            type=dataset_ISPRS,
+            data_root=data_root_vaihingen,
+            img_dir='img_dir/train',
+            ann_dir='ann_dir_os/train',
             pipeline=train_pipeline)),
     val=dict(
-        type=dataset_type_val,
-        data_root=data_root_val,
+        type=dataset_ISPRS,
+        data_root=data_root_vaihingen, #! Changed!
         img_dir='img_dir/val',
-        ann_dir='ann_dir/val',
+        ann_dir='ann_dir_os/val',
         pipeline=test_pipeline),
     test=dict(
-        type=dataset_type_val,
-        data_root=data_root_val,
+        type=dataset_ISPRS,
+        data_root=data_root_vaihingen, #! Changed!
         img_dir='img_dir/val',
-        ann_dir='ann_dir/val',
+        ann_dir='ann_dir_os/val',
         pipeline=test_pipeline))

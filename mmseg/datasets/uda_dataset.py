@@ -107,7 +107,7 @@ class UDADataset(object):
         s2 = self.target[i2]
         return {
             **s1, 'target_img_metas': s2['img_metas'],
-            'target_img': s2['img'], 'target_gt': s2['gt_semantic_seg'] # Added this part
+            'target_img': s2['img'], 'target_gt': s2['gt_semantic_seg']
         }
 
     def __getitem__(self, idx):

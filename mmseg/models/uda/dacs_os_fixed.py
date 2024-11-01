@@ -21,6 +21,7 @@ from timm.models.layers import DropPath
 from torch.nn.modules.dropout import _DropoutNd
 
 from mmseg.core import add_prefix
+
 from mmseg.models import UDA, build_segmentor
 from mmseg.models.uda.uda_decorator import UDADecorator, get_module
 from mmseg.models.utils.dacs_transforms import (denorm, get_class_masks,
@@ -28,7 +29,118 @@ from mmseg.models.utils.dacs_transforms import (denorm, get_class_masks,
 from mmseg.models.utils.visualization import subplotimg
 from mmseg.utils.utils import downscale_label_ratio
 
+from mmseg.core.evaluation.metrics import total_intersect_and_union
+import seaborn as sns
+from sklearn.metrics import roc_curve
+def analyze_max_distribution(gt_target_seg, ema_logits, gt_semantic_seg, src_logit, num_classes, axs, out_dir, local_iter):
+    ##* Max Logit ##
+    # Find logits that belongs to ID and OOD
+    ID_mask = torch.logical_and((gt_target_seg != (num_classes-1)), (gt_target_seg != 255))
+    ID_mask = ID_mask.squeeze(1)
+    OOD_mask = (gt_target_seg == (num_classes-1))
+    OOD_mask = OOD_mask.squeeze(1)
+    max_logit = torch.max(ema_logits, dim=1)[0]
+    ID_probs = max_logit.detach().cpu()[ID_mask]
+    OOD_probs = max_logit.detach().cpu()[OOD_mask]
+    src_max_logit = torch.max(src_logit, dim=1)[0].detach().cpu()
+    # Mask src_max_logit based on gt_semantic_seg
+    src_mask = torch.logical_and((gt_semantic_seg != (num_classes-1)), (gt_semantic_seg != 255))
+    src_mask = src_mask.squeeze(1)
+    src_max_logit = src_max_logit[src_mask]
+    # Calculate for ID vs OOD
+    y_true_ood = np.concatenate([np.ones_like(ID_probs), np.zeros_like(OOD_probs)])
+    y_scores_ood = np.concatenate([ID_probs, OOD_probs])
+    fpr_ood, tpr_ood, thresholds_ood = roc_curve(y_true_ood, y_scores_ood)
+    fpr95_ood = fpr_ood[np.where(tpr_ood >= 0.95)[0][0]]
+    thres_ood = thresholds_ood[np.where(tpr_ood >= 0.95)[0][0]]
 
+    # Calculate for Source vs OOD
+    y_true_src_ood = np.concatenate([np.ones_like(src_max_logit), np.zeros_like(OOD_probs)])
+    y_scores_src_ood = np.concatenate([src_max_logit, OOD_probs])
+    fpr_src_ood, tpr_src_ood, thresholds_src_ood = roc_curve(y_true_src_ood, y_scores_src_ood)
+    fpr95_src_ood = fpr_src_ood[np.where(tpr_src_ood >= 0.95)[0][0]]
+    thres_src_ood = thresholds_src_ood[np.where(tpr_src_ood >= 0.95)[0][0]]
+
+    sns.kdeplot(ID_probs, shade=True, label='in-distribution', color='blue', ax=axs)
+    sns.kdeplot(OOD_probs, shade=True, label='out-of-distribution', color='gray', ax=axs)
+    sns.kdeplot(src_max_logit, shade=True, label='source-distribution', color='green', ax=axs)
+    axs.axvline(x=thres_ood, color='red', linestyle='--', linewidth=0.5, label='OOD Threshold')
+    axs.axvline(x=thres_src_ood, color='orange', linestyle='--', linewidth=0.5, label='Source Threshold')
+    
+    # Adding labels and title
+    axs.set_title(f'ID - FPR95: {fpr95_ood:.4f}, Threshold: {thres_ood:.4f}\n'
+                    f'Source - FPR95: {fpr95_src_ood:.4f}, Threshold: {thres_src_ood:.4f}')
+    axs.set_xlabel('Max Logit Score')
+    axs.set_ylabel('Frequency')
+    axs.legend(loc='upper right')
+
+    plt.savefig(
+        os.path.join(out_dir,
+                        f'{(local_iter + 1):06d}.png'))
+    plt.close()
+
+def analyze_class_distribution(gt_target_seg, ema_logits, gt_semantic_seg, src_logit, num_classes, axs, out_dir, local_iter):
+    # Create a figure with subplots for each class
+    num_rows = (num_classes - 1 + 2) // 3  # +2 to include OOD
+    fig, axs = plt.subplots(num_rows, 3, figsize=(15, 5*num_rows))
+    axs = axs.flatten()
+    # Prepare data
+    max_logit, pred_classes = torch.max(ema_logits, dim=1)
+    max_logit = max_logit.detach().cpu()
+    pred_classes = pred_classes.detach().cpu()
+    src_max_logit, src_pred_classes = torch.max(src_logit, dim=1)
+    src_max_logit = src_max_logit.detach().cpu()
+    src_pred_classes = src_pred_classes.detach().cpu()
+    gt_target_seg = gt_target_seg.squeeze(1).cpu()
+    gt_semantic_seg = gt_semantic_seg.squeeze(1).cpu()
+    
+    # Plot distribution for each class
+    for class_idx in range(num_classes - 1):
+        ax = axs[class_idx]
+        
+        # Target domain - ID
+        id_mask = (gt_target_seg == class_idx) & (pred_classes == class_idx)
+        id_probs = max_logit[id_mask]
+        
+        if len(id_probs) > 0:
+            sns.kdeplot(id_probs, shade=True, label='target ID', color='blue', ax=ax)
+        
+        # Target domain - OOD
+        ood_mask = (gt_target_seg == num_classes-1) & (pred_classes == class_idx)
+        ood_probs = max_logit[ood_mask]
+        
+        if len(ood_probs) > 0:
+            sns.kdeplot(ood_probs, shade=True, label='target OOD', color='red', ax=ax)
+        
+        # Source domain
+        src_class_mask = (gt_semantic_seg == class_idx) & (src_pred_classes == class_idx)
+        src_class_probs = src_max_logit[src_class_mask]
+        
+        if len(src_class_probs) > 0:
+            sns.kdeplot(src_class_probs, shade=True, label='source', color='green', ax=ax)
+        
+        ax.set_title(f'Class {class_idx}')
+        ax.set_xlabel('Max Logit Score')
+        ax.set_ylabel('Frequency')
+        ax.legend()
+    
+    # Plot OOD distribution
+    ood_ax = axs[-1]
+    ood_mask = (gt_target_seg == (num_classes-1))
+    ood_probs = max_logit[ood_mask]
+    if len(ood_probs) > 0:
+        sns.kdeplot(ood_probs, shade=True, label='OOD', color='red', ax=ood_ax)
+    ood_ax.set_title('OOD')
+    ood_ax.set_xlabel('Max Logit Score')
+    ood_ax.set_ylabel('Frequency')
+    ood_ax.legend()
+    
+    # Remove any unused subplots
+    for idx in range(num_classes + 1, len(axs)):
+        fig.delaxes(axs[idx])
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, f'{(local_iter + 1):06d}_class_dist.png'))
+    plt.close()
 def _params_equal(ema_model, model):
     for ema_param, param in zip(ema_model.named_parameters(),
                                 model.named_parameters()):
@@ -53,14 +165,14 @@ def calc_grad_magnitude(grads, norm_type=2.0):
 class DACS_OS_Fixed(UDADecorator):
 
     def __init__(self, **cfg):
-        super(DACS_OS_Fixed(), self).__init__(**cfg)
+        super(DACS_OS_Fixed, self).__init__(**cfg)
         self.local_iter = 0
         self.max_iters = cfg['max_iters']
         self.alpha = cfg['alpha']
         self.pseudo_threshold_p = cfg['pseudo_threshold_p'] # unknown threshold
         self.pseudo_threshold_t = cfg['pseudo_threshold_t'] # confidence
-        self.update_threshold_iter = cfg['update_threshold_iter'] # iterations to update threshold
         self.unknown_label = cfg['unknown_label'] # the label of the unknown classes
+        self.use_raw_logits = cfg['use_raw_logits'] # Use raw logits in pseudo_prob
         self.psweight_ignore_top = cfg['pseudo_weight_ignore_top']
         self.psweight_ignore_bottom = cfg['pseudo_weight_ignore_bottom']
         self.fdist_lambda = cfg['imnet_feature_dist_lambda']
@@ -87,6 +199,10 @@ class DACS_OS_Fixed(UDADecorator):
         else:
             self.imnet_model = None
 
+        self.alpha_iou = cfg['alpha_iou']
+        self.source_iou = None
+        self.source_pretrain = cfg['source_pretrain']
+        self.source_selection = cfg['source_selection']
     def get_ema_model(self):
         return get_module(self.ema_model)
 
@@ -192,7 +308,7 @@ class DACS_OS_Fixed(UDADecorator):
         return feat_loss, feat_log
 
     def forward_train(self, img, img_metas, gt_semantic_seg, target_img,
-                      target_img_metas):
+                      target_img_metas, target_gt):
         """Forward function for training.
 
         Args:
@@ -232,7 +348,27 @@ class DACS_OS_Fixed(UDADecorator):
             'mean': means[0].unsqueeze(0),  # assume same normalization
             'std': stds[0].unsqueeze(0)
         }
-
+        src_logit = self.get_model().encode_decode(
+            img, img_metas)
+        _, source_label = torch.max(src_logit, dim=1)
+        # Ensure source_label and gt_semantic_seg are in the correct shape and type
+        source_label_iou = source_label.squeeze(1).cpu().numpy()  
+        gt_semantic_seg_iou = gt_semantic_seg.squeeze(1).cpu().numpy()  
+        total_intersect, total_union, _, _ = total_intersect_and_union(
+            [source_label_iou],  # Wrap in list as function expects list of arrays
+            [gt_semantic_seg_iou],  # Wrap in list as function expects list of arrays
+            self.num_classes,
+            255
+        )
+        if self.source_iou is None:
+            self.source_iou = (total_intersect / total_union).numpy()
+        else:
+            # do a EMA update for the source iou
+            new_iou = (total_intersect / total_union).numpy()
+            mask = ~np.isnan(new_iou) # mask out the ones that are nan in new_iou
+            if self.source_selection:
+                self.source_iou[mask] = self.alpha_iou * self.source_iou[mask] + \
+                    (1 - self.alpha_iou) * new_iou[mask]
         # Train on source images
         clean_losses = self.get_model().forward_train(
             img, img_metas, gt_semantic_seg, return_feat=True)
@@ -276,12 +412,25 @@ class DACS_OS_Fixed(UDADecorator):
         pseudo_prob, pseudo_label = torch.max(ema_softmax, dim=1)
 
         ps_large_t = pseudo_prob.ge(self.pseudo_threshold_t).long() == 1
+        if self.use_raw_logits:
+            pseudo_prob, pseudo_label = torch.max(ema_logits, dim=1) #! Using raw logits in pseudo_prob
         pseudo_label_copy = pseudo_label.clone().detach() # Copy for further visualization
         pseudo_prob_copy = pseudo_prob.clone().detach() # Copy for further visualization
-        if self.unknown_label != None: #and self.local_iter >= self.start_unknown: 
+        #mmcv.print_log(self.local_iter, 'mmseg')
+        #ps_small_p = torch.logical_and(ps_small_p, (pseudo_label != 2))
+        #pseudo_label[ps_small_p] = self.unknown_label
+
+        if self.unknown_label != None and self.local_iter >= self.source_pretrain: 
             # All pixels with condifence less than pseudo_threshold_p
             ps_small_p = pseudo_prob.lt(self.pseudo_threshold_p).long() == 1 
+            if self.source_selection is True:
+                for i in range(self.source_iou.shape[0]):
+                    if self.source_iou[i] < 0.7:
+                        ps_small_p = torch.logical_and(ps_small_p, (pseudo_label != i))
             pseudo_label[ps_small_p] = self.unknown_label
+        if self.local_iter % 50 == 0:
+            mmcv.print_log(f'source_iou:{self.source_iou}', 'mmseg')
+
         ps_size = np.size(np.array(pseudo_label.cpu()))
         pseudo_weight = torch.sum(ps_large_t).item() / ps_size # q_t, confidence
         pseudo_weight = pseudo_weight * torch.ones(
@@ -311,17 +460,42 @@ class DACS_OS_Fixed(UDADecorator):
                 target=torch.stack((gt_pixel_weight[i], pseudo_weight[i])))
         mixed_img = torch.cat(mixed_img)
         mixed_lbl = torch.cat(mixed_lbl)
-
+        
         # Train on mixed images
-        mix_losses = self.get_model().forward_train(
-            mixed_img, img_metas, mixed_lbl, pseudo_weight, return_feat=True)
-        mix_losses.pop('features')
-        mix_losses = add_prefix(mix_losses, 'mix')
-        mix_loss, mix_log_vars = self._parse_losses(mix_losses)
-        log_vars.update(mix_log_vars)
-        mix_loss.backward()
-
+        if self.unknown_label != None and self.local_iter >= self.source_pretrain:
+            mix_losses = self.get_model().forward_train(
+                mixed_img, img_metas, mixed_lbl, pseudo_weight, return_feat=True)
+            mix_losses.pop('features')
+            mix_losses = add_prefix(mix_losses, 'mix')
+            mix_loss, mix_log_vars = self._parse_losses(mix_losses)
+            log_vars.update(mix_log_vars)
+            mix_loss.backward()
+        # Analyze max distribution
         if self.local_iter % self.debug_img_interval == 0:
+            
+            out_dir = os.path.join(self.train_cfg['work_dir'], 'max_logit_debug')
+            os.makedirs(out_dir, exist_ok=True)
+            
+            # Create a new figure for the max logit distribution plot
+            fig, ax = plt.subplots(figsize=(10, 6))
+            
+           
+            # Call analyze_class_distribution
+            analyze_class_distribution(
+                gt_target_seg=target_gt,
+                ema_logits=ema_logits,
+                gt_semantic_seg=gt_semantic_seg,
+                src_logit=src_logit,
+                num_classes=self.num_classes,
+                axs=ax,
+                out_dir=out_dir,
+                local_iter=self.local_iter
+            )
+            
+            plt.close(fig)  # Close the figure to free up memory
+         
+        if self.local_iter % self.debug_img_interval == 0:
+            cmap_type = 'isprs'
             out_dir = os.path.join(self.train_cfg['work_dir'],
                                    'class_mix_debug')
             os.makedirs(out_dir, exist_ok=True)
@@ -349,17 +523,17 @@ class DACS_OS_Fixed(UDADecorator):
                     axs[0][1],
                     gt_semantic_seg[j],
                     'Source Seg GT',
-                    cmap='cityscapes')
+                    cmap=cmap_type)
                 subplotimg(
                     axs[1][1],
                     pseudo_label_copy[j],
                     'Target Pseudo GT',
-                    cmap='cityscapes')
+                    cmap=cmap_type)
                 subplotimg(
                     axs[1][2],
                     pseudo_label[j],
                     'Target Threshold (Pseudo) GT',
-                    cmap='cityscapes')
+                    cmap=cmap_type)
                 subplotimg(
                     axs[0][2],
                     pseudo_prob_copy[j],
@@ -371,7 +545,7 @@ class DACS_OS_Fixed(UDADecorator):
                 # subplotimg(axs[0][3], pred_u_s[j], "Seg Pred",
                 #            cmap="cityscapes")
                 subplotimg(
-                    axs[1][4], mixed_lbl[j], 'Seg Targ', cmap='cityscapes')
+                    axs[1][4], mixed_lbl[j], 'Seg Targ', cmap=cmap_type)
                 subplotimg(
                     axs[0][4], pseudo_weight[j], 'Pseudo W.', vmin=0, vmax=1)
                 """
@@ -386,7 +560,7 @@ class DACS_OS_Fixed(UDADecorator):
                         axs[1][4],
                         self.debug_gt_rescale[j],
                         'Scaled GT',
-                        cmap='cityscapes')
+                        cmap=cmap_type)
                 """
                 for ax in axs.flat:
                     ax.axis('off')

@@ -4,6 +4,5 @@
 # ---------------------------------------------------------------
 
 from mmseg.models.uda.dacs_os_fixed import DACS_OS_Fixed
-from mmseg.models.uda.dacs_os_dynamic import DACS_OS_Dynamic
 
-__all__ = ['DACS_OS_Fixed', 'DACS_OS_Dynamic']
+__all__ = ['DACS_OS_Fixed']
