@@ -22,18 +22,18 @@ def convert_to_train_id(file):
         11: 2,
         12: 3,
         13: 4,
-        17: 5,
+        17: 255,
         19: 6,
-        20: 7,
+        20: 255,
         21: 8,
         22: 9,
         23: 10,
-        24: 11,
-        25: 12,
+        24: 255,
+        25: 255,
         26: 13,
-        27: 14,
+        27: 255,
         28: 15,
-        31: 16,
+        31: 255,
         32: 17,
         33: 18
     }
@@ -43,7 +43,7 @@ def convert_to_train_id(file):
         k_mask = label == k
         label_copy[k_mask] = v
         n = int(np.sum(k_mask))
-        if n > 0:
+        if n > 0 and v != 255: # don't put 255 into RCS
             sample_class_stats[v] = n
     new_file = file.replace('.png', '_labelTrainIds.png')
     assert file != new_file

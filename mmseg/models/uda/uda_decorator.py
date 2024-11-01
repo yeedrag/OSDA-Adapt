@@ -54,6 +54,7 @@ class UDADecorator(BaseSegmentor):
                       gt_semantic_seg,
                       target_img,
                       target_img_metas,
+                      gt_target,
                       return_feat=False):
         """Forward function for training.
 

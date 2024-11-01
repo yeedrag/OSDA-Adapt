@@ -14,23 +14,27 @@ from .custom import CustomDataset
 
 @DATASETS.register_module()
 class CityscapesDataset(CustomDataset):
-    """Cityscapes dataset.
+    """Cityscapes dataset for OSDA.
 
     The ``img_suffix`` is fixed to '_leftImg8bit.png' and ``seg_map_suffix`` is
     fixed to '_gtFine_labelTrainIds.png' for Cityscapes dataset.
-    """
 
+    Classes [pole, traffic sign, person, rider, truck, train] will be ignored
+    and set as the unknown class. The unknown class will be set to class 13.
+    For the GTA dataset, the unknowns will be set to 255, since we want to ignore
+    duing training. However, the unknowns for cityscapes will be set to 13, since 
+    we would need the pseudo labels to count as losses.
+    """
     CLASSES = ('road', 'sidewalk', 'building', 'wall', 'fence', 'pole',
                'traffic light', 'traffic sign', 'vegetation', 'terrain', 'sky',
                'person', 'rider', 'car', 'truck', 'bus', 'train', 'motorcycle',
-               'bicycle')
+               'bicycle', 'unknown')
 
     PALETTE = [[128, 64, 128], [244, 35, 232], [70, 70, 70], [102, 102, 156],
                [190, 153, 153], [153, 153, 153], [250, 170, 30], [220, 220, 0],
                [107, 142, 35], [152, 251, 152], [70, 130, 180], [220, 20, 60],
                [255, 0, 0], [0, 0, 142], [0, 0, 70], [0, 60, 100],
-               [0, 80, 100], [0, 0, 230], [119, 11, 32]]
-
+               [0, 80, 100], [0, 0, 230], [119, 11, 32], [255, 255, 255]]
     def __init__(self,
                  img_suffix='_leftImg8bit.png',
                  seg_map_suffix='_gtFine_labelTrainIds.png',
@@ -47,7 +51,7 @@ class CityscapesDataset(CustomDataset):
         result_copy = result.copy()
         for trainId, label in CSLabels.trainId2label.items():
             result_copy[result == trainId] = label.id
-
+        result_copy[result == 19] = 'unknown' # Add unknown
         return result_copy
 
     def results2img(self, results, imgfile_prefix, to_label_id):

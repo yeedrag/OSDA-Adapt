@@ -1,5 +1,5 @@
 # Obtained from: https://github.com/open-mmlab/mmsegmentation/tree/v0.16.0
-
+# Obtained from https://github.com/KHU-AGI/BUS/blob/4ffd247e79a33d56e779343f1b35a35c1de27560/mmseg/core/evaluation/metrics.py#L288
 from collections import OrderedDict
 
 import mmcv
@@ -285,7 +285,7 @@ def eval_metrics(results,
     """
     if isinstance(metrics, str):
         metrics = [metrics]
-    allowed_metrics = ['mIoU', 'mDice', 'mFscore']
+    allowed_metrics = ['mIoU', 'mDice', 'mFscore','h_score'] # modified
     if not set(metrics).issubset(set(allowed_metrics)):
         raise KeyError('metrics {} is not supported'.format(metrics))
 
@@ -315,6 +315,14 @@ def eval_metrics(results,
             ret_metrics['Fscore'] = f_value
             ret_metrics['Precision'] = precision
             ret_metrics['Recall'] = recall
+        elif metric == 'h_score': # modified
+            iou = total_area_intersect / total_area_union
+            acc = total_area_intersect / total_area_label
+            ret_metrics['IoU'] = iou
+            ret_metrics['Acc'] = acc
+            import statistics
+            ret_metrics['common']=torch.tensor(np.nanmean(iou[:-1]))
+            ret_metrics['h_score'] = torch.tensor(float(statistics.harmonic_mean([np.nanmean(iou[:-1]),float(iou[-1])])))
 
     ret_metrics = {
         metric: value.numpy()

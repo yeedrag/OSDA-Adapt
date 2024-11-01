@@ -15,14 +15,44 @@ import numpy as np
 from cityscapesscripts.preparation.json2labelImg import json2labelImg
 from PIL import Image
 
-
+id_to_trainid = {
+    0: 0,
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 19,
+    6: 6,
+    7: 19,
+    8: 8,
+    9: 9,
+    10: 10,
+    11: 19,
+    12: 19,
+    13: 13,
+    14: 19,
+    15: 15,
+    16: 19,
+    17: 17,
+    18: 18
+}
 def convert_json_to_label(json_file):
     label_file = json_file.replace('_polygons.json', '_labelTrainIds.png')
     json2labelImg(json_file, label_file, 'trainIds')
+    pil_label = Image.open(label_file)
+    label = np.asarray(pil_label)
+ 
+    # Modify the labels
+    label_copy = 255 * np.ones(label.shape, dtype=np.uint8)
+    sample_class_stats = {}
+    for k, v in id_to_trainid.items():
+        k_mask = label == k
+        label_copy[k_mask] = v
 
+    Image.fromarray(label_copy, mode='L').save(label_file)
+
+    # Count RCS
     if 'train/' in json_file:
-        pil_label = Image.open(label_file)
-        label = np.asarray(pil_label)
         sample_class_stats = {}
         for c in range(19):
             n = int(np.sum(label == c))

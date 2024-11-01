@@ -105,10 +105,9 @@ class UDADataset(object):
                 s1 = self.source[i1]
         i2 = np.random.choice(range(len(self.target)))
         s2 = self.target[i2]
-
         return {
             **s1, 'target_img_metas': s2['img_metas'],
-            'target_img': s2['img']
+            'target_img': s2['img'], 'target_gt': s2['gt_semantic_seg']
         }
 
     def __getitem__(self, idx):

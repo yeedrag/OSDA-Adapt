@@ -1,4 +1,5 @@
 # Obtained from: https://github.com/open-mmlab/mmsegmentation/tree/v0.16.0
+# Obtained from https://github.com/KHU-AGI/BUS/blob/4ffd247e79a33d56e779343f1b35a35c1de27560/mmseg/datasets/custom.py#L28
 # Modifications:
 # - Additional dataset location logging
 
@@ -151,6 +152,7 @@ class CustomDataset(Dataset):
         else:
             for img in mmcv.scandir(img_dir, img_suffix, recursive=True):
                 img_info = dict(filename=img)
+
                 if ann_dir is not None:
                     seg_map = img.replace(img_suffix, seg_map_suffix)
                     img_info['ann'] = dict(seg_map=seg_map)
@@ -330,7 +332,7 @@ class CustomDataset(Dataset):
 
         if isinstance(metric, str):
             metric = [metric]
-        allowed_metrics = ['mIoU', 'mDice', 'mFscore']
+        allowed_metrics = ['mIoU', 'mDice', 'mFscore','h_score'] # modified
         if not set(metric).issubset(set(allowed_metrics)):
             raise KeyError('metric {} is not supported'.format(metric))
         eval_results = {}
@@ -362,6 +364,8 @@ class CustomDataset(Dataset):
 
         # each class table
         ret_metrics.pop('aAcc', None)
+        ret_metrics.pop('h_score', None) # modified
+        ret_metrics.pop('common', None) # modified
         ret_metrics_class = OrderedDict({
             ret_metric: np.round(ret_metric_value * 100, 2)
             for ret_metric, ret_metric_value in ret_metrics.items()
@@ -378,6 +382,10 @@ class CustomDataset(Dataset):
         for key, val in ret_metrics_summary.items():
             if key == 'aAcc':
                 summary_table_data.add_column(key, [val])
+            elif key == 'h_score': # modified
+                summary_table_data.add_column(key, [val])
+            elif key == 'common': # modified
+                summary_table_data.add_column(key, [val])
             else:
                 summary_table_data.add_column('m' + key, [val])
 
@@ -389,6 +397,10 @@ class CustomDataset(Dataset):
         # each metric dict
         for key, value in ret_metrics_summary.items():
             if key == 'aAcc':
+                eval_results[key] = value / 100.0
+            elif key == 'h_score': # modified
+                eval_results[key] = value / 100.0
+            elif key == 'common': # modified
                 eval_results[key] = value / 100.0
             else:
                 eval_results['m' + key] = value / 100.0

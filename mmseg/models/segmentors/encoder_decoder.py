@@ -149,7 +149,7 @@ class EncoderDecoder(BaseSegmentor):
                 used if the architecture supports semantic segmentation task.
 
         Returns:
-            dict[str, Tensor]: a dictionary of loss components
+            dict[str, Tensor]: a dictionary of loss components 
         """
         x = self.extract_feat(img)
 
@@ -234,7 +234,7 @@ class EncoderDecoder(BaseSegmentor):
 
         return seg_logit
 
-    def inference(self, img, img_meta, rescale):
+    def inference(self, img, img_meta, rescale, softmax=True):
         """Inference with slide/whole style.
 
         Args:
@@ -257,7 +257,10 @@ class EncoderDecoder(BaseSegmentor):
             seg_logit = self.slide_inference(img, img_meta, rescale)
         else:
             seg_logit = self.whole_inference(img, img_meta, rescale)
-        output = F.softmax(seg_logit, dim=1)
+        if softmax:
+            output = F.softmax(seg_logit, dim=1)
+        else:
+            output = seg_logit
         flip = img_meta[0]['flip']
         if flip:
             flip_direction = img_meta[0]['flip_direction']
@@ -271,7 +274,7 @@ class EncoderDecoder(BaseSegmentor):
 
     def simple_test(self, img, img_meta, rescale=True):
         """Simple test with single image."""
-        seg_logit = self.inference(img, img_meta, rescale)
+        seg_logit = self.inference(img, img_meta, rescale, softmax=True)
         seg_pred = seg_logit.argmax(dim=1)
         if torch.onnx.is_in_onnx_export():
             # our inference backend only support 4D output

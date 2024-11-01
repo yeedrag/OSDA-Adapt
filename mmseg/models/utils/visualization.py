@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from PIL import Image
-
+"""
 Cityscapes_palette = [
     128, 64, 128, 244, 35, 232, 70, 70, 70, 102, 102, 156, 190, 153, 153, 153,
     153, 153, 250, 170, 30, 220, 220, 0, 107, 142, 35, 152, 251, 152, 70, 130,
@@ -52,7 +52,14 @@ Cityscapes_palette = [
     192, 160, 96, 192, 32, 224, 192, 160, 224, 192, 96, 96, 64, 224, 96, 64,
     96, 224, 64, 224, 224, 64, 96, 96, 192, 224, 96, 192, 96, 224, 192, 0, 0, 0
 ]
-
+"""
+Cityscapes_palette = [128, 64, 128, 244, 35, 232, 70, 70, 70, 102, 102, 156,
+                    190, 153, 153, 153, 153, 153, 250, 170, 30, 220, 220, 0,
+                    107, 142, 35, 152, 251, 152, 70, 130, 180, 220, 20, 60,
+                    255, 0, 0, 0, 0, 142, 0, 0, 70, 0, 60, 100,
+                    0, 80, 100, 0, 0, 230, 119, 11, 32, 255, 255, 255]
+ISPRS_palette = [255, 255, 255, 0, 0, 255, 0, 255, 255, 0, 255, 0,
+255, 255, 0, 255, 0, 0, 128, 0, 128]
 
 def colorize_mask(mask, palette):
     zero_pad = 256 * 3 - len(palette)
@@ -102,6 +109,11 @@ def subplotimg(ax,
             if torch.is_tensor(img):
                 img = img.numpy()
             img = colorize_mask(img, palette)
+        elif kwargs.get('cmap', '') == 'isprs':
+            kwargs.pop('cmap')
+            if torch.is_tensor(img):
+                img = img.numpy()
+            img = colorize_mask(img, ISPRS_palette)
 
     if range_in_title:
         vmin = np.min(img)

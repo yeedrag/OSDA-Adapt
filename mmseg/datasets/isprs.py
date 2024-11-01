@@ -12,10 +12,10 @@ class ISPRSDataset(CustomDataset):
     ``seg_map_suffix`` are both fixed to '.png'.
     """
     CLASSES = ('impervious_surface', 'building', 'low_vegetation', 'tree',
-               'car', 'clutter')
+               'car', 'clutter', 'unknown')
 
     PALETTE = [[255, 255, 255], [0, 0, 255], [0, 255, 255], [0, 255, 0],
-               [255, 255, 0], [255, 0, 0]]
+               [255, 255, 0], [255, 0, 0], [128, 0, 128]]
 
     def __init__(self, **kwargs):
         super(ISPRSDataset, self).__init__(
